@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "flag"
 )
 
@@ -14,7 +13,7 @@ func main() {
 
     conf := getConfig(configFile)
 
-    fmt.Println(conf.InstallDir)
-    fmt.Println("config file: " + configFile)
+    PrintLine("Config (" + configFile + ")", 0)
+    PrintLine("InstallDir: " + conf.InstallDir, 1)
 
 }
