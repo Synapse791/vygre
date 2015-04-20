@@ -13,7 +13,10 @@ type ContainerInfo struct {
 }
 
 func ReadContainerFiles() ([]ContainerInfo, error) {
+
     configDir := config.InstallDir + "/conf.d/"
+
+    // TODO: Check if directory exists
 
     fileList, _ := ioutil.ReadDir(configDir)
 
@@ -22,6 +25,7 @@ func ReadContainerFiles() ([]ContainerInfo, error) {
     for _, file := range fileList {
         var cont ContainerInfo
         data, _ := os.Open(configDir + file.Name())
+        // TODO: error handling
 
         decoder := json.NewDecoder(data)
         decoder.Decode(&cont)
