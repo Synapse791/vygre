@@ -6,21 +6,21 @@ import (
     "encoding/json"
 )
 
-type ContainerConfig struct {
+type ContainerInfo struct {
     Hostname    string  `json:'hostname'`
     Image       string  `json:'image'`
     Instances   int     `json:'instances'`
 }
 
-func ReadContainerFiles() ([]ContainerConfig, error) {
+func ReadContainerFiles() ([]ContainerInfo, error) {
     configDir := config.InstallDir + "/conf.d/"
 
     fileList, _ := ioutil.ReadDir(configDir)
 
-    var containerInfo []ContainerConfig
+    var containerInfo []ContainerInfo
 
     for _, file := range fileList {
-        var cont ContainerConfig
+        var cont ContainerInfo
         data, _ := os.Open(configDir + file.Name())
 
         decoder := json.NewDecoder(data)
