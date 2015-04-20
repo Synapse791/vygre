@@ -23,6 +23,8 @@ func setConfig(filePath string) {
         return
     }
 
+    // TODO: replace check() with proper handling
+
     file, err := os.Open(filePath)
     check(err)
 
