@@ -8,7 +8,7 @@ func PrintLine(line string, indent int) {
 
     switch indent {
         case 1:
-            space = "  > "
+            space = "|-> "
         case 2:
             space = "  |-> "
         default:
@@ -21,4 +21,15 @@ func PrintLine(line string, indent int) {
 
 func PrintBreak() {
     fmt.Println("")
+}
+
+func PrintConfig() {
+    chk := fmt.Sprintf("CheckInterval: %d seconds", config.CheckInterval)
+
+    PrintLine("--------------------------------------",0)
+    PrintLine("Config (" + configFile + ")", 0)
+    PrintLine("InstallDir: " + config.InstallDir, 1)
+    PrintLine("DockerEndpoint: " + config.DockerEndpoint, 1)
+    PrintLine(chk, 1)
+    PrintLine("--------------------------------------",0)
 }
