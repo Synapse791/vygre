@@ -15,6 +15,8 @@ type Config struct {
 func setConfig(filePath string) {
 
     if _, err := os.Stat(filePath); os.IsNotExist(err) {
+        configFile = "defaults"
+
         PrintLine("Config file not found. Using defaults", 0)
         PrintBreak()
 
@@ -52,9 +54,12 @@ func setDefaults() {
 
 func PrintConfig() {
 
+
+    PrintLine("--------------------------------------",0)
     PrintLine("Config (" + configFile + ")", 0)
     PrintLine("InstallDir: " + config.InstallDir, 1)
     PrintLine("DockerEndpoint: " + config.DockerEndpoint, 1)
+    PrintLine("--------------------------------------",0)
 
 }
 

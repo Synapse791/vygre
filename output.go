@@ -6,10 +6,13 @@ func PrintLine(line string, indent int) {
 
     var space string
 
-    if indent == 1 {
-        space = "  > "
-    } else {
-        space = ""
+    switch indent {
+        case 1:
+            space = "  > "
+        case 2:
+            space = "  |-> "
+        default:
+            space = ""
     }
 
     fmt.Println(space + line)
