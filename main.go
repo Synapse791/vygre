@@ -4,15 +4,16 @@ import (
     "flag"
 )
 
+var configFile string
+
 func main() {
 
-    var configFile string
     flag.StringVar(&configFile, "c", "/etc/vygre/config.json", "file path to the JSON config file")
 
     flag.Parse()
 
-    conf := getConfig(configFile)
+    setConfig(configFile)
 
-    PrintConfig(configFile, conf)
+    PrintConfig()
 
 }
