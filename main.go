@@ -13,7 +13,6 @@ func main() {
 
     conf := getConfig(configFile)
 
-    PrintLine("Config (" + configFile + ")", 0)
-    PrintLine("InstallDir: " + conf.InstallDir, 1)
+    PrintConfig(configFile, conf)
 
 }

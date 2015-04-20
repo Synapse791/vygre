@@ -15,3 +15,7 @@ func PrintLine(line string, indent int) {
     fmt.Println(space + line)
 
 }
+
+func PrintBreak() {
+    fmt.Println("")
+}
