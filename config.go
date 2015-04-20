@@ -8,17 +8,15 @@ import (
 var config Config
 
 type Config struct {
-    InstallDir      string
-    DockerEndpoint  string
+    InstallDir      string  `json:'install_dir'`
+    DockerEndpoint  string  `json:'docker_endpoint'`
+    CheckInterval   int     `json:'check_interval'`
 }
 
 func setConfig(filePath string) {
 
     if _, err := os.Stat(filePath); os.IsNotExist(err) {
         configFile = "defaults"
-
-        PrintLine("Config file not found. Using defaults", 0)
-        PrintBreak()
 
         setDefaults()
 
@@ -27,9 +25,6 @@ func setConfig(filePath string) {
 
     file, err := os.Open(filePath)
     check(err)
-
-    PrintLine("Found config file: " + filePath, 0)
-    PrintBreak()
 
     decoder := json.NewDecoder(file)
 
@@ -50,17 +45,10 @@ func setDefaults() {
     if config.DockerEndpoint == "" {
         config.DockerEndpoint = "unix:///var/run/docker.sock"
     }
-}
 
-func PrintConfig() {
-
-
-    PrintLine("--------------------------------------",0)
-    PrintLine("Config (" + configFile + ")", 0)
-    PrintLine("InstallDir: " + config.InstallDir, 1)
-    PrintLine("DockerEndpoint: " + config.DockerEndpoint, 1)
-    PrintLine("--------------------------------------",0)
-
+    if config.CheckInterval == 0 {
+        config.CheckInterval = 3
+    }
 }
 
 func check(e error) {
