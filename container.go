@@ -12,6 +12,7 @@ type ContainerInfo struct {
     Image       string                  `json:"image"`
     Instances   int                     `json:"instances"`
     Env         []string                `json:"env"`
+    Volumes     []string                `json:"volumes"`
 }
 
 func ReadContainerFiles() ([]ContainerInfo, error) {

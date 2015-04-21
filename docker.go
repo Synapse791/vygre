@@ -23,6 +23,7 @@ func GetContainerCount(image string) (int, error) {
 
 func CreateContainer(c ContainerInfo) {
     var createInfo dockerclient.ContainerConfig
+    var hostConfig dockerclient.HostConfig
 
     createInfo.Image = c.Image
 
@@ -36,6 +37,10 @@ func CreateContainer(c ContainerInfo) {
         createInfo.Env = c.Env
     }
 
+    if c.Volumes != nil {
+        hostConfig.Binds = c.Volumes
+    }
+
     log.Print("creating new " + createInfo.Image)
 
     docker, _ := dockerclient.NewDockerClient(config.DockerEndpoint, nil)
@@ -47,7 +52,7 @@ func CreateContainer(c ContainerInfo) {
 
     log.Print("starting ", id)
 
-    err2 := docker.StartContainer(id, nil)
+    err2 := docker.StartContainer(id, &hostConfig)
     if err2 != nil {
         log.Fatal(err2)
     }
