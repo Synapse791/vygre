@@ -32,6 +32,8 @@ func main() {
 
     log.Print("config_check: PASSED")
 
+    CheckContainers(containerConfigs)
+
     for _ = range time.Tick(config.CheckInterval * time.Second) {
         CheckContainers(containerConfigs)
     }
