@@ -31,6 +31,7 @@ func main() {
 
     log.Print("config_check: PASSED")
 
+    //TODO: Run inside time loop based on config.CheckInterval
     CheckContainers(containerConfigs)
 
     CheckContainers(containerConfigs)
