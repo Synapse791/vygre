@@ -6,6 +6,21 @@ Vygre is a service designed to ensure that docker containers stay running. Maybe
 The program reads JSON config files describing your containers and creates them accordingly. In these files you can specify the image, volumes, ports and how many instances of the container there should be.
 
 ### Application config
+The default location for the config.json file is `/etc/vygre/config.json`. This can be altered using the `-c` flag and passing the filepath of the config.json file when running the program.
+
+```sh
+vygre -c /tmp/config.json
+```
+
+You can also test the application config using the `-t` flag.
+
+```sh
+vygre -c /tmp/config.json -t
+
+# Or to test the default location
+vygre -t
+```
+
 ```json
 {
   "install_dir"     : "/etc/vygre",
