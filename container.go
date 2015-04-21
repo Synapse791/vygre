@@ -4,12 +4,14 @@ import (
     "io/ioutil"
     "os"
     "encoding/json"
+    "errors"
 )
 
 type ContainerInfo struct {
-    Hostname    string  `json:'hostname'`
-    Image       string  `json:'image'`
-    Instances   int     `json:'instances'`
+    Hostname    string                  `json:"hostname"`
+    Image       string                  `json:"image"`
+    Instances   int                     `json:"instances"`
+    Env         []string                `json:"env"`
 }
 
 func ReadContainerFiles() ([]ContainerInfo, error) {
@@ -30,9 +32,27 @@ func ReadContainerFiles() ([]ContainerInfo, error) {
         decoder := json.NewDecoder(data)
         decoder.Decode(&cont)
 
+        err := CheckContainerInfo(file, cont)
+        if err != nil {
+            return nil, err
+        }
+
         containerInfo = append(containerInfo, cont)
     }
 
     return containerInfo, nil
 
+}
+
+func CheckContainerInfo(f os.FileInfo, c ContainerInfo) error {
+    if c.Image == "" {
+        return errors.New(f.Name() + ": missing image definition")
+    }
+
+    //TODO: Check if image has version appended
+
+    if c.Instances == 0 {
+        return errors.New(f.Name() + ": missing instances definition")
+    }
+    return nil
 }
