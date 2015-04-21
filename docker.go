@@ -27,8 +27,6 @@ func CreateContainer(c ContainerInfo) {
 
     createInfo.Image = c.Image
 
-    //TODO: Check is image exists. Pull if not
-
     if c.Hostname != "" {
         createInfo.Hostname = c.Hostname
     }
@@ -50,6 +48,11 @@ func CreateContainer(c ContainerInfo) {
     log.Print("creating new " + createInfo.Image)
 
     docker, _ := dockerclient.NewDockerClient(config.DockerEndpoint, nil)
+
+    pullErr := docker.PullImage(createInfo.Image, &config.Auth)
+    if pullErr != nil {
+        log.Fatal(pullErr)
+    }
 
     id, err := docker.CreateContainer(&createInfo, "")
     if err != nil {

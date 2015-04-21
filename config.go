@@ -5,15 +5,17 @@ import (
     "encoding/json"
     "log"
     "time"
+    "github.com/samalba/dockerclient"
 )
 
-var config Config
-
 type Config struct {
-    InstallDir      string          `json:"install_dir"`
-    DockerEndpoint  string          `json:"docker_endpoint"`
-    CheckInterval   time.Duration   `json:"check_interval"`
+    InstallDir      string                  `json:"install_dir"`
+    DockerEndpoint  string                  `json:"docker_endpoint"`
+    CheckInterval   time.Duration           `json:"check_interval"`
+    Auth            dockerclient.AuthConfig `json:"auth"`
 }
+
+var config Config
 
 func setConfig(filePath string) {
 
