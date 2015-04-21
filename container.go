@@ -5,14 +5,16 @@ import (
     "os"
     "encoding/json"
     "errors"
+    "github.com/samalba/dockerclient"
 )
 
 type ContainerInfo struct {
-    Hostname    string                  `json:"hostname"`
-    Image       string                  `json:"image"`
-    Instances   int                     `json:"instances"`
-    Env         []string                `json:"env"`
-    Volumes     []string                `json:"volumes"`
+    Hostname    string                                  `json:"hostname"`
+    Image       string                                  `json:"image"`
+    Instances   int                                     `json:"instances"`
+    Env         []string                                `json:"env"`
+    Volumes     []string                                `json:"volumes"`
+    Ports       map[string][]dockerclient.PortBinding   `json:"ports"`
 }
 
 func ReadContainerFiles() ([]ContainerInfo, error) {

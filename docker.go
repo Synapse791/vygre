@@ -41,6 +41,12 @@ func CreateContainer(c ContainerInfo) {
         hostConfig.Binds = c.Volumes
     }
 
+    if c.Ports != nil {
+        hostConfig.PortBindings = c.Ports
+    } else {
+        hostConfig.PublishAllPorts = true
+    }
+
     log.Print("creating new " + createInfo.Image)
 
     docker, _ := dockerclient.NewDockerClient(config.DockerEndpoint, nil)
