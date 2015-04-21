@@ -26,6 +26,8 @@ func CreateContainer(c ContainerInfo) {
 
     createInfo.Image = c.Image
 
+    //TODO: Check is image exists. Pull if not
+
     if c.Hostname != "" {
         createInfo.Hostname = c.Hostname
     }
