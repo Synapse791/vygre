@@ -59,11 +59,11 @@ func CreateContainer(c ContainerInfo) {
         log.Fatal(err)
     }
 
-    log.Print("starting ", id)
-
     err2 := docker.StartContainer(id, &hostConfig)
     if err2 != nil {
         log.Fatal(err2)
     }
+
+    log.Print("started ", id)
 
 }

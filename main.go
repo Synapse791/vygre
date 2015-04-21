@@ -41,6 +41,8 @@ func main() {
 }
 
 func CheckContainers(containerConfigs []ContainerInfo) {
+    log.Print("------------------------------------------------")
+
     for _, c := range containerConfigs {
         count, _ := GetContainerCount(c.Image)
         log.Printf("%s > %d of %d running", c.Image, count, c.Instances)
