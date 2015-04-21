@@ -1,8 +1,6 @@
 # Vygre
 **Keep your docker containers running**
 
----
-
 ### Overview
 Vygre is a service designed to ensure that docker containers stay running. Maybe you have a web service running in a docker container and you want to make sure that if for some reason the container dies, your site doesn't go down. Vygre will spot that container isn't running and start up another.
 The program reads JSON config files describing your containers and creates them accordingly. In these files you can specify the image, volumes, ports and how many instances of the container there should be.
@@ -26,6 +24,7 @@ The program reads JSON config files describing your containers and creates them 
 * **auth** - The authorization information for docker (as if you ran `sudo docker login`) *DEFAULT: nil*
 
 ### Example container config file
+Container configuration files should be stored in the conf.d directory inside the `install_dir` directory from the config.json file. 
 ```json
 {
   "image": "mysql:latest",
