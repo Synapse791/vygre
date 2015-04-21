@@ -4,14 +4,15 @@ import (
     "os"
     "encoding/json"
     "log"
+    "time"
 )
 
 var config Config
 
 type Config struct {
-    InstallDir      string  `json:"install_dir"`
-    DockerEndpoint  string  `json:"docker_endpoint"`
-    CheckInterval   int     `json:"check_interval"`
+    InstallDir      string          `json:"install_dir"`
+    DockerEndpoint  string          `json:"docker_endpoint"`
+    CheckInterval   time.Duration   `json:"check_interval"`
 }
 
 func setConfig(filePath string) {

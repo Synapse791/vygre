@@ -3,6 +3,7 @@ package main
 import (
     "flag"
     "log"
+    "time"
 )
 
 var configFile string
@@ -31,10 +32,9 @@ func main() {
 
     log.Print("config_check: PASSED")
 
-    //TODO: Run inside time loop based on config.CheckInterval
-    CheckContainers(containerConfigs)
-
-    CheckContainers(containerConfigs)
+    for _ = range time.Tick(config.CheckInterval * time.Second) {
+        CheckContainers(containerConfigs)
+    }
 
 }
 
