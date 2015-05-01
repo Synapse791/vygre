@@ -1,25 +1,17 @@
 package main
 
 import (
-    "flag"
     "log"
     "time"
 )
 
-var configFile string
-
 func main() {
 
-    var isTest bool
+    ParseFlags()
 
-    flag.StringVar(&configFile, "c", "/etc/vygre/config.json", "file path to the JSON config file")
-    flag.BoolVar(&isTest, "t", false, "test configuration")
+    setConfig(flags.ConfigFilePath)
 
-    flag.Parse()
-
-    setConfig(configFile)
-
-    if isTest {
+    if flags.ConfigCheck {
         PrintConfig()
         return
     }

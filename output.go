@@ -27,7 +27,7 @@ func PrintConfig() {
     chk := fmt.Sprintf("CheckInterval: %d seconds", config.CheckInterval)
 
     PrintLine("--------------------------------------",0)
-    PrintLine("Config (" + configFile + ")", 0)
+    PrintLine("Config (" + flags.ConfigFilePath + ")", 0)
     PrintLine("InstallDir: " + config.InstallDir, 1)
     PrintLine("DockerEndpoint: " + config.DockerEndpoint, 1)
     PrintLine(chk, 1)

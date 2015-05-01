@@ -21,7 +21,6 @@ func setConfig(filePath string) {
 
     if _, err := os.Stat(filePath); os.IsNotExist(err) {
         log.Print("Config file not found: " + filePath)
-        configFile = "defaults"
 
         setDefaults()
 
