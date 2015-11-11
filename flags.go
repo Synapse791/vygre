@@ -9,9 +9,10 @@ type FlagOpts struct {
 
 var flags FlagOpts
 
-func ParseFlags() {
+func init() {
     flag.StringVar(&flags.ConfigFilePath, "c", "defaults", "file path to the JSON config file")
     flag.BoolVar(&flags.ConfigCheck, "t", false, "test configuration")
+    flag.BoolVar(&flags.ConfigCheck, "version", false, "print version information")
 
     flag.Parse()
 }

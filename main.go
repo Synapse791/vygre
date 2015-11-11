@@ -7,8 +7,6 @@ import (
 
 func main() {
 
-    ParseFlags()
-
     setConfig(flags.ConfigFilePath)
 
     if flags.ConfigCheck {
