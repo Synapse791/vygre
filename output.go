@@ -33,3 +33,7 @@ func PrintConfig() {
     PrintLine(chk, 1)
     PrintLine("--------------------------------------",0)
 }
+
+func PrintVersion() {
+    PrintLine("vygre version " + currentVersion,0)
+}

@@ -7,6 +7,11 @@ import (
 
 func main() {
 
+    if flags.VersionCheck {
+        PrintVersion()
+        return
+    }
+
     setConfig(flags.ConfigFilePath)
 
     if flags.ConfigCheck {
