@@ -9,6 +9,7 @@ import (
     log "github.com/Sirupsen/logrus"
     "github.com/fsouza/go-dockerclient"
     "strings"
+    "time"
 )
 
 const dockerEndpoint        = "unix:///var/run/docker.sock"
@@ -24,7 +25,7 @@ type VygreClient struct {
 }
 
 type VygreConfig struct {
-    CheckInterval   int                         `json:"check_interval"`
+    CheckInterval   time.Duration               `json:"check_interval"`
     Auth            docker.AuthConfiguration    `json:"auth"`
 }
 
@@ -190,6 +191,12 @@ func (client *VygreClient) ProcessContainerConfig() {
         vygreOptions.Options    =   &options
 
         client.CreateOptions    =   append(client.CreateOptions, &vygreOptions)
+    }
+}
+
+func (c *VygreClient) RunServer() {
+    for _ = range time.Tick(c.Config.CheckInterval * time.Second) {
+        println("test")
     }
 }
 

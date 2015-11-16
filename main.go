@@ -35,8 +35,6 @@ func main() {
     vygre.ReadContainerConfig()
     vygre.ProcessContainerConfig()
 
-//    for _ = range time.Tick(config.CheckInterval * time.Second) {
-//        CheckContainers(containerConfigs)
-//    }
+    vygre.RunServer()
 
 }
