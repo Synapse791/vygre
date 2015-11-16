@@ -29,8 +29,8 @@ type VygreConfig struct {
     Auth            docker.AuthConfiguration    `json:"auth"`
 }
 
-// TODO add container name
 type VygreContainerConfig struct {
+    Name            string      `json:"container_name"`
     Instances       int         `json:"instances"`
     Image           string      `json:"image"`
     Ports           []string    `json:"ports"`
@@ -140,6 +140,10 @@ func (client *VygreClient) ProcessContainerConfig() {
 
         vygreOptions.Instances  =   containerConfig.Instances
         config.Image    =   containerConfig.Image
+
+        if containerConfig.Name != "" {
+            options.Name    =   containerConfig.Name
+        }
 
         if len(containerConfig.Ports) > 0 {
             for _, port := range containerConfig.Ports {
