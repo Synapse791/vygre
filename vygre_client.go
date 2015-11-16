@@ -166,6 +166,7 @@ func (client *VygreClient) ProcessContainerConfig() {
                     }
                 }
             }
+            // TODO else add port/tcp to exposed ports???
         }
 
         if len(containerConfig.Environments) > 0 {
