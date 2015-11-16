@@ -34,6 +34,7 @@ func main() {
     vygre.CheckConfig()
     vygre.ReadContainerConfig()
     vygre.ProcessContainerConfig()
+    vygre.UpdateImages()
 
     vygre.RunServer()
 

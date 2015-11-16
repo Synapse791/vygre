@@ -207,8 +207,53 @@ func (client *VygreClient) ProcessContainerConfig() {
     }
 }
 
-func (c *VygreClient) RunServer() {
-    for _ = range time.Tick(c.Config.CheckInterval * time.Second) {
+func (client *VygreClient) UpdateImages() {
+    for _, config := range client.ContainerConfigs {
+        var pullOptions docker.PullImageOptions
+
+        parts := strings.Split(config.Image, "/")
+
+        if strings.Contains(parts[0], ".") {
+            pullOptions.Registry    =   parts[0]
+        }
+
+        if strings.Contains(parts[len(parts) - 1], ":") {
+            tagParts        :=  strings.Split(parts[len(parts) - 1], ":")
+            pullOptions.Tag =   tagParts[1]
+        }
+
+        if pullOptions.Registry != "" && pullOptions.Tag != "" {
+            prefixTrim  :=  strings.TrimPrefix(config.Image, fmt.Sprintf("%s/", pullOptions.Registry))
+            suffixTrim  :=  strings.TrimSuffix(prefixTrim, fmt.Sprintf(":%s", pullOptions.Tag))
+
+            pullOptions.Repository  =   suffixTrim
+        } else if pullOptions.Registry != "" && pullOptions.Tag == "" {
+            prefixTrim  :=  strings.TrimPrefix(config.Image, fmt.Sprintf("%s/", pullOptions.Registry))
+
+            pullOptions.Repository  =   prefixTrim
+        } else if pullOptions.Registry == "" && pullOptions.Tag != "" {
+            suffixTrim  :=  strings.TrimSuffix(config.Image, fmt.Sprintf(":%s", pullOptions.Tag))
+
+            pullOptions.Repository  =   suffixTrim
+        } else {
+            pullOptions.Repository  =   config.Image
+        }
+
+        tmp, _ := json.Marshal(pullOptions)
+        println(string(tmp))
+
+        if err := client.DockerClient.PullImage(pullOptions, client.Config.Auth); err != nil {
+            log.WithError(err).Fatal("failed to pull docker image")
+        }
+
+    }
+}
+
+func (client *VygreClient) RunServer() {
+    for _ = range time.Tick(client.Config.CheckInterval * time.Second) {
+//        for index, options := range client.CreateOptions {
+//
+//        }
         // TODO Check each container has desired count
         // TODO Create any new containers that are required
         println("test")
