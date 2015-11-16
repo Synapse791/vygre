@@ -1,51 +1,43 @@
 package main
 
 import (
-    "log"
-    "time"
+    "flag"
+    "os/user"
+    "os"
+    log "github.com/Sirupsen/logrus"
+    "encoding/json"
 )
+
+var vygre *VygreClient
+
+func init() {
+    currentUser, _ := user.Current()
+
+    if currentUser.Uid != "0" { log.Fatal("vygre must be run as root") }
+
+    flag.StringVar(&flags.ConfigFilePath, "c", "defaults", "file path to the JSON config file")
+    flag.BoolVar(&flags.ConfigCheck, "t", false, "test configuration")
+    flag.BoolVar(&flags.VersionCheck, "v", false, "print version information")
+
+    flag.Parse()
+}
 
 func main() {
 
+    vygre = NewVygreClient()
+
     if flags.VersionCheck {
-        PrintVersion()
-        return
+        vygre.PrintVersion()
+        os.Exit(0)
     }
 
-    setConfig(flags.ConfigFilePath)
+    vygre.ReadConfig()
+    vygre.CheckConfig()
+    vygre.ReadContainerConfig()
+    vygre.ProcessContainerConfig()
 
-    if flags.ConfigCheck {
-        PrintConfig()
-        return
-    }
+//    for _ = range time.Tick(config.CheckInterval * time.Second) {
+//        CheckContainers(containerConfigs)
+//    }
 
-    containerConfigs, err := ReadContainerFiles()
-    if err != nil {
-        log.Print("config_check: FAILED")
-        log.Fatal(err)
-    }
-
-    log.Print("config_check: PASSED")
-
-    CheckContainers(containerConfigs)
-
-    for _ = range time.Tick(config.CheckInterval * time.Second) {
-        CheckContainers(containerConfigs)
-    }
-
-}
-
-func CheckContainers(containerConfigs []ContainerInfo) {
-    log.Print("------------------------------------------------")
-
-    for _, c := range containerConfigs {
-        count, _ := GetContainerCount(c.Image)
-        log.Printf("%s > %d of %d running", c.Image, count, c.Instances)
-        if count < c.Instances {
-            log.Printf("increasing %s count by %d", c.Image, c.Instances - count)
-            for loopCount := count; loopCount < c.Instances; loopCount ++{
-                CreateContainer(c)
-            }
-        }
-    }
 }
