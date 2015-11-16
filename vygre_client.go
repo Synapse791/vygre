@@ -164,9 +164,16 @@ func (client *VygreClient) ProcessContainerConfig() {
                         bindingMap[docker.Port(parts[1] + "/tcp")] = []docker.PortBinding{binding}
                         hostConfig.PortBindings =   bindingMap
                     }
+                } else {
+                    portMap := make(map[docker.Port]struct{})
+
+                    var empty struct{}
+
+                    portMap[docker.Port(fmt.Sprintf("%s/tcp", port))]   =   empty
+
+                    config.ExposedPorts = portMap
                 }
             }
-            // TODO else add port/tcp to exposed ports???
         }
 
         if len(containerConfig.Environments) > 0 {
