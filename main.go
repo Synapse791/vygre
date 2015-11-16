@@ -5,7 +5,6 @@ import (
     "os/user"
     "os"
     log "github.com/Sirupsen/logrus"
-    "encoding/json"
 )
 
 var vygre *VygreClient
