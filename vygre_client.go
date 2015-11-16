@@ -29,6 +29,7 @@ type VygreConfig struct {
     Auth            docker.AuthConfiguration    `json:"auth"`
 }
 
+// TODO add container name
 type VygreContainerConfig struct {
     Instances       int         `json:"instances"`
     Image           string      `json:"image"`
@@ -196,6 +197,8 @@ func (client *VygreClient) ProcessContainerConfig() {
 
 func (c *VygreClient) RunServer() {
     for _ = range time.Tick(c.Config.CheckInterval * time.Second) {
+        // TODO Check each container has desired count
+        // TODO Create any new containers that are required
         println("test")
     }
 }
@@ -211,5 +214,7 @@ func CheckContainerConfig(c VygreContainerConfig) error {
     if c.Instances == 0 {
         return errors.New("instance is required and must be more than 0")
     }
+    // TODO check if volume is present on host system
+    // TODO check if port is free to bind to
     return nil
 }
