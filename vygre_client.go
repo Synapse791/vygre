@@ -41,7 +41,7 @@ type VygreContainerConfig struct {
 
 type VygreCreateOptions struct {
     Instances   int
-    Options     *docker.CreateContainerOptions
+    Options     docker.CreateContainerOptions
 }
 
 func NewVygreClient() *VygreClient {
@@ -118,10 +118,6 @@ func (client *VygreClient) ReadContainerConfig() {
             log.WithError(errors.New(fmt.Sprintf("invalid JSON in %s", fileName))).Fatal("invalid configuration")
         }
 
-        if err := CheckContainerConfig(config); err != nil {
-            log.WithError(err).Fatal("invalid configuration")
-        }
-
         client.ContainerConfigs = append(client.ContainerConfigs, &config)
 
         log.Infof("read %s successfully", fullName)
@@ -135,8 +131,8 @@ func (client *VygreClient) CheckContainerConfig() {
         if config.Instances < 1 {
             log.Fatalf("instances must be at least 1: '%d' given", config.Instances)
         }
-        if match, _ := regexp.MatchString("^[a-zA-Z0-9_-]{4,}$", config.Name); config.Name != "" && !match {
-            log.Fatal("container name must be alphanumeric, underscores or hyphons and at least 4 characters")
+        if match, _ := regexp.MatchString("^[a-zA-Z0-9_]{4,}$", config.Name); config.Name != "" && !match {
+            log.Fatal("container name must contain only alphanumeric and underscores and be at least 4 characters long")
         }
         if match, _ := regexp.MatchString("^(?:(?:[a-zA-Z0-9-.:]+)+/)?(?:[a-zA-Z0-9-]+/)?[a-zA-Z0-9-]+(?::[a-zA-Z0-9-.]+)?$", config.Image); !match {
             log.Fatal("image must be a standard docker image name with option registry location and/or tag")
@@ -235,7 +231,7 @@ func (client *VygreClient) ProcessContainerConfig() {
 
         options.Config          =   &config
         options.HostConfig      =   &hostConfig
-        vygreOptions.Options    =   &options
+        vygreOptions.Options    =   options
 
         client.CreateOptions    =   append(client.CreateOptions, &vygreOptions)
     }
@@ -256,38 +252,52 @@ func (client *VygreClient) UpdateImages() {
             pullOptions.Tag =   tagParts[1]
         }
 
-        if pullOptions.Registry != "" && pullOptions.Tag != "" {
-            prefixTrim  :=  strings.TrimPrefix(config.Image, fmt.Sprintf("%s/", pullOptions.Registry))
-            suffixTrim  :=  strings.TrimSuffix(prefixTrim, fmt.Sprintf(":%s", pullOptions.Tag))
+        suffixTrim  :=  strings.TrimSuffix(config.Image, fmt.Sprintf(":%s", pullOptions.Tag))
 
-            pullOptions.Repository  =   suffixTrim
-        } else if pullOptions.Registry != "" && pullOptions.Tag == "" {
-            prefixTrim  :=  strings.TrimPrefix(config.Image, fmt.Sprintf("%s/", pullOptions.Registry))
+        pullOptions.Repository  =   suffixTrim
 
-            pullOptions.Repository  =   prefixTrim
-        } else if pullOptions.Registry == "" && pullOptions.Tag != "" {
-            suffixTrim  :=  strings.TrimSuffix(config.Image, fmt.Sprintf(":%s", pullOptions.Tag))
-
-            pullOptions.Repository  =   suffixTrim
-        } else {
-            pullOptions.Repository  =   config.Image
-        }
+        log.Infof("pulling %s image", config.Image)
 
         if err := client.DockerClient.PullImage(pullOptions, client.Config.Auth); err != nil {
             log.WithError(err).Fatal("failed to pull docker image")
         }
+
+        log.Info("pulled successfully")
 
     }
 }
 
 func (client *VygreClient) RunServer() {
     for _ = range time.Tick(client.Config.CheckInterval * time.Second) {
-//        for index, options := range client.CreateOptions {
-//
-//        }
-        // TODO Check each container has desired count
-        // TODO Create any new containers that are required
-        println("test")
+        log.Info("checking running containers")
+
+        for _, options := range client.CreateOptions {
+            containerList, err := client.DockerClient.ListContainers(docker.ListContainersOptions{All: false})
+            if err != nil {
+                log.WithError(err).Fatal("failed to list running containers")
+            }
+
+            count := GetContainerCount(containerList, options.Options.Config.Image)
+
+            log.Infof("%d of %d %s containers running", count, options.Instances, options.Options.Config.Image)
+
+            if count < options.Instances {
+                log.Infof("creating new %s container", options.Options.Config.Image)
+                options.Options.Name = ""
+                new, err := client.DockerClient.CreateContainer(options.Options)
+                if err != nil {
+                    log.WithError(err).Fatal("failed to create container")
+                }
+                log.Infof("created %s", new.ID)
+
+                log.Infof("starting %s", new.ID)
+                if err := client.DockerClient.StartContainer(new.ID, new.HostConfig); err != nil {
+                    log.WithError(err).Fatal("failed to start container")
+                }
+
+                // TODO check if container is running successfully (new.State)
+            }
+        }
     }
 }
 
@@ -295,14 +305,14 @@ func (client *VygreClient) PrintVersion() {
     fmt.Printf("vygre %s\n", client.Version)
 }
 
-func CheckContainerConfig(c VygreContainerConfig) error {
-    if c.Image == "" {
-        return errors.New("image is required")
+func GetContainerCount(containerList []docker.APIContainers, image string) int {
+    count := 0
+
+    for _, container := range containerList {
+        if container.Image == image {
+            count++
+        }
     }
-    if c.Instances == 0 {
-        return errors.New("instance is required and must be more than 0")
-    }
-    // TODO check if volume is present on host system
-    // TODO check if port is free to bind to
-    return nil
+
+    return count
 }
