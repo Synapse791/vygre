@@ -10,6 +10,7 @@ import (
     "github.com/fsouza/go-dockerclient"
     "strings"
     "time"
+    "regexp"
 )
 
 const dockerEndpoint        = "unix:///var/run/docker.sock"
@@ -129,6 +130,39 @@ func (client *VygreClient) ReadContainerConfig() {
 
 }
 
+func (client *VygreClient) CheckContainerConfig() {
+    for _, config := range client.ContainerConfigs {
+        if config.Instances < 1 {
+            log.Fatalf("instances must be at least 1: '%d' given", config.Instances)
+        }
+        if match, _ := regexp.MatchString("^[a-zA-Z0-9_-]{4,}$", config.Name); config.Name != "" && !match {
+            log.Fatal("container name must be alphanumeric, underscores or hyphons and at least 4 characters")
+        }
+        if match, _ := regexp.MatchString("^(?:(?:[a-zA-Z0-9-.:]+)+/)?(?:[a-zA-Z0-9-]+/)?[a-zA-Z0-9-]+(?::[a-zA-Z0-9-.]+)?$", config.Image); !match {
+            log.Fatal("image must be a standard docker image name with option registry location and/or tag")
+        }
+        for _, port := range config.Ports {
+            if match, _ := regexp.MatchString("^(?:[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:)?(?:[0-9]{1,5}:)?[0-9]{1,5}$", port); !match {
+                log.WithError(fmt.Errorf("ports must follow the format of the docker run -p flag (https://docs.docker.com/engine/reference/run/#expose-incoming-ports)")).Fatal(fmt.Sprintf("invalid port '%s'", port))
+            }
+        }
+        for _, env := range config.Environments {
+            if match, _ := regexp.MatchString("^[A-Za-z0-9_]+=.+$", env); !match {
+                log.Fatal("image must be a standard docker image name with option registry location and/or tag")
+            }
+        }
+        for _, volume := range config.Volumes {
+            parts := strings.Split(volume, ":")
+            if _, err := os.Stat(parts[0]); os.IsNotExist(err) {
+                log.WithError(err).Fatalf("volume mount not found")
+            }
+            if match, _ := regexp.MatchString("^[/a-zA-z0-9-_\\.]+:[/a-zA-z0-9-_\\.]+", volume); !match {
+                log.Fatal("image must be a standard docker image name with option registry location and/or tag")
+            }
+        }
+    }
+}
+
 func (client *VygreClient) ProcessContainerConfig() {
     log.Infof("processing %d configuration(s)", len(client.ContainerConfigs))
 
@@ -238,9 +272,6 @@ func (client *VygreClient) UpdateImages() {
         } else {
             pullOptions.Repository  =   config.Image
         }
-
-        tmp, _ := json.Marshal(pullOptions)
-        println(string(tmp))
 
         if err := client.DockerClient.PullImage(pullOptions, client.Config.Auth); err != nil {
             log.WithError(err).Fatal("failed to pull docker image")
