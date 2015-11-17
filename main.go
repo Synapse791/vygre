@@ -33,6 +33,12 @@ func main() {
     vygre.ReadConfig()
     vygre.CheckConfig()
     vygre.ReadContainerConfig()
+
+    if flags.ConfigCheck {
+        log.Info("configuration ok")
+        return
+    }
+
     vygre.ProcessContainerConfig()
     vygre.UpdateImages()
 
