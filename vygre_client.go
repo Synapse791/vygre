@@ -31,17 +31,23 @@ type VygreConfig struct {
 }
 
 type VygreContainerConfig struct {
-    Name            string      `json:"container_name"`
-    Instances       int         `json:"instances"`
-    Image           string      `json:"image"`
-    Ports           []string    `json:"ports"`
-    Volumes         []string    `json:"volumes"`
-    Environments    []string    `json:"environments"`
+    Name            string              `json:"container_name"`
+    Instances       int                 `json:"instances"`
+    Image           string              `json:"image"`
+    Ports           []string            `json:"ports"`
+    Volumes         []string            `json:"volumes"`
+    Environments    map[string]string   `json:"env"`
 }
 
 type VygreCreateOptions struct {
     Instances   int
+    State       VygreOptionsState
     Options     docker.CreateContainerOptions
+}
+
+type VygreOptionsState struct {
+    Active      bool
+    Attempts    int
 }
 
 func NewVygreClient() *VygreClient {
@@ -142,11 +148,11 @@ func (client *VygreClient) CheckContainerConfig() {
                 log.WithError(fmt.Errorf("ports must follow the format of the docker run -p flag (https://docs.docker.com/engine/reference/run/#expose-incoming-ports)")).Fatal(fmt.Sprintf("invalid port '%s'", port))
             }
         }
-        for _, env := range config.Environments {
-            if match, _ := regexp.MatchString("^[A-Za-z0-9_]+=.+$", env); !match {
-                log.Fatal("image must be a standard docker image name with option registry location and/or tag")
-            }
-        }
+//        for _, env := range config.Environments {
+//            if match, _ := regexp.MatchString("^[A-Za-z0-9_]+=.+$", env); !match {
+//                log.Fatal("image must be a standard docker image name with option registry location and/or tag")
+//            }
+//        }
         for _, volume := range config.Volumes {
             parts := strings.Split(volume, ":")
             if _, err := os.Stat(parts[0]); os.IsNotExist(err) {
@@ -207,7 +213,10 @@ func (client *VygreClient) ProcessContainerConfig() {
         }
 
         if len(containerConfig.Environments) > 0 {
-            config.Env  =   containerConfig.Environments
+            for key, value := range containerConfig.Environments {
+                combined    :=  fmt.Sprintf("%s=%s", key, value)
+                config.Env  =   append(config.Env, combined)
+            }
         }
 
         if len(containerConfig.Volumes) > 0 {
@@ -231,7 +240,10 @@ func (client *VygreClient) ProcessContainerConfig() {
 
         options.Config          =   &config
         options.HostConfig      =   &hostConfig
-        vygreOptions.Options    =   options
+
+        vygreOptions.State.Active   =   true
+        vygreOptions.State.Attempts =   0
+        vygreOptions.Options        =   options
 
         client.CreateOptions    =   append(client.CreateOptions, &vygreOptions)
     }
@@ -250,6 +262,8 @@ func (client *VygreClient) UpdateImages() {
         if strings.Contains(parts[len(parts) - 1], ":") {
             tagParts        :=  strings.Split(parts[len(parts) - 1], ":")
             pullOptions.Tag =   tagParts[1]
+        } else {
+            pullOptions.Tag =   "latest"
         }
 
         suffixTrim  :=  strings.TrimSuffix(config.Image, fmt.Sprintf(":%s", pullOptions.Tag))
@@ -258,7 +272,14 @@ func (client *VygreClient) UpdateImages() {
 
         log.Infof("pulling %s image", config.Image)
 
-        if err := client.DockerClient.PullImage(pullOptions, client.Config.Auth); err != nil {
+        var auth docker.AuthConfiguration
+
+        if pullOptions.Registry != "" && strings.Contains(client.Config.Auth.ServerAddress, pullOptions.Registry) {
+            log.Info("using auth")
+            auth = client.Config.Auth
+        }
+
+        if err := client.DockerClient.PullImage(pullOptions, auth); err != nil {
             log.WithError(err).Fatal("failed to pull docker image")
         }
 
@@ -272,12 +293,12 @@ func (client *VygreClient) RunServer() {
         log.Info("checking running containers")
 
         for _, options := range client.CreateOptions {
-            containerList, err := client.DockerClient.ListContainers(docker.ListContainersOptions{All: false})
-            if err != nil {
-                log.WithError(err).Fatal("failed to list running containers")
+            if ! options.State.Active {
+                log.Warnf("INACTIVE: %s", options.Options.Config.Image)
+                continue
             }
 
-            count := GetContainerCount(containerList, options.Options.Config.Image)
+            count := client.GetContainerCount(options.Options.Config.Image)
 
             log.Infof("%d of %d %s containers running", count, options.Instances, options.Options.Config.Image)
 
@@ -295,7 +316,18 @@ func (client *VygreClient) RunServer() {
                     log.WithError(err).Fatal("failed to start container")
                 }
 
-                // TODO check if container is running successfully (new.State)
+                time.Sleep(2 * time.Second)
+
+                newCount := client.GetContainerCount(options.Options.Config.Image)
+
+                if newCount != count + 1 {
+                    log.Warnf("failed to start %s", new.ID)
+                    options.State.Attempts++
+                    if options.State.Attempts > 3 {
+                        options.State.Active    =   false
+                        log.Errorf("setting %s to INACTIVE", options.Options.Config.Image)
+                    }
+                }
             }
         }
     }
@@ -305,7 +337,12 @@ func (client *VygreClient) PrintVersion() {
     fmt.Printf("vygre %s\n", client.Version)
 }
 
-func GetContainerCount(containerList []docker.APIContainers, image string) int {
+func (client *VygreClient) GetContainerCount(image string) int {
+    containerList, err := client.DockerClient.ListContainers(docker.ListContainersOptions{All: false})
+    if err != nil {
+        log.WithError(err).Fatal("failed to list running containers")
+    }
+
     count := 0
 
     for _, container := range containerList {
