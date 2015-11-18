@@ -5,7 +5,21 @@
 Vygre is a service designed to ensure that docker containers are always running. Maybe you have a web service running in a docker container and you want to make sure that if for some reason the container dies, your site doesn't go down. Vygre will spot that container isn't running and start up another based on your configuration.
 The program reads JSON config files describing your containers and creates them accordingly. In these files you can specify the image, ports, environment variables, volumes, and how many instances of the container there should be.
 
+
+
 ### Vygre configuration
+
+#### Flags
+The following flags are available to alter the behavior of the service
+ 
+Flag | Description                | Exit Code               | Default
+-----|----------------------------|-------------------------|---------
+`-d` | enables debug logging      | nil                     | false
+`-h` | prints help information    | 0                       | false
+`-t` | tests configuration        | 0 on success, 1 on fail | false
+`-v` | prints version information | 0                       | false
+
+#### Configuration File (required)
 The location for the JSON configuration file is `/etc/vygre/config.json`
 
 #### Structure
