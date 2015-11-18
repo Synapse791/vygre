@@ -30,6 +30,8 @@ func main() {
         os.Exit(0)
     }
 
+    vygre.Logger.Warn("initializing server")
+
     vygre.ReadConfig()
     vygre.CheckConfig()
     vygre.ReadContainerConfig()
@@ -42,6 +44,9 @@ func main() {
 
     vygre.ProcessContainerConfig()
     vygre.UpdateImages()
+
+    vygre.Logger.Warn("initialization complete")
+    vygre.Logger.Warn("running server")
 
     vygre.RunServer()
 
