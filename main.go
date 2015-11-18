@@ -1,51 +1,36 @@
 package main
 
-import (
-    "log"
-    "time"
-)
-
 func main() {
 
+    vygre = NewVygreClient()
+
     if flags.VersionCheck {
-        PrintVersion()
+        vygre.PrintVersion()
+        return
+    }
+    if flags.Help {
+        vygre.PrintHelp()
         return
     }
 
-    setConfig(flags.ConfigFilePath)
+    vygre.Logger.Warn("initializing server")
 
-    if flags.ConfigCheck {
-        PrintConfig()
+    vygre.ReadConfig()
+    vygre.CheckConfig()
+    vygre.ReadContainerConfig()
+    vygre.CheckContainerConfig()
+
+    if flags.TestConfig {
+        vygre.Logger.Info("configuration ok")
         return
     }
 
-    containerConfigs, err := ReadContainerFiles()
-    if err != nil {
-        log.Print("config_check: FAILED")
-        log.Fatal(err)
-    }
+    vygre.ProcessContainerConfig()
+    vygre.UpdateImages()
 
-    log.Print("config_check: PASSED")
+    vygre.Logger.Warn("initialization complete")
+    vygre.Logger.Warn("running server")
 
-    CheckContainers(containerConfigs)
+    vygre.RunServer()
 
-    for _ = range time.Tick(config.CheckInterval * time.Second) {
-        CheckContainers(containerConfigs)
-    }
-
-}
-
-func CheckContainers(containerConfigs []ContainerInfo) {
-    log.Print("------------------------------------------------")
-
-    for _, c := range containerConfigs {
-        count, _ := GetContainerCount(c.Image)
-        log.Printf("%s > %d of %d running", c.Image, count, c.Instances)
-        if count < c.Instances {
-            log.Printf("increasing %s count by %d", c.Image, c.Instances - count)
-            for loopCount := count; loopCount < c.Instances; loopCount ++{
-                CreateContainer(c)
-            }
-        }
-    }
 }

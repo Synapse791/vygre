@@ -1,19 +1,29 @@
 package main
 
-import "flag"
+import (
+    "flag"
+    "os/user"
+    log "github.com/Sirupsen/logrus"
+)
 
 type FlagOpts struct {
-    ConfigFilePath  string
-    ConfigCheck     bool
-    VersionCheck    bool
+    DebugMode    bool
+    Help         bool
+    TestConfig   bool
+    VersionCheck bool
 }
 
 var flags FlagOpts
 
 func init() {
-    flag.StringVar(&flags.ConfigFilePath, "c", "defaults", "file path to the JSON config file")
-    flag.BoolVar(&flags.ConfigCheck, "t", false, "test configuration")
-    flag.BoolVar(&flags.VersionCheck, "version", false, "print version information")
+    currentUser, _ := user.Current()
+
+    if currentUser.Uid != "0" { log.Fatal("vygre must be run as root") }
+
+    flag.BoolVar(&flags.DebugMode,      "d", false, "enables debug logging")
+    flag.BoolVar(&flags.Help,           "h", false, "prints help information        Exits with code 0")
+    flag.BoolVar(&flags.TestConfig,     "t", false, "tests configuration            Exits with code 0 on success or code 1 on failure")
+    flag.BoolVar(&flags.VersionCheck,   "v", false, "prints version information     Exits with code 0")
 
     flag.Parse()
 }
