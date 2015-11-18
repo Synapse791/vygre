@@ -242,23 +242,7 @@ func (client *VygreClient) ProcessContainerConfig() {
 
         if len(containerConfig.Volumes) > 0 {
             for _, volume := range containerConfig.Volumes {
-                var mount docker.Mount
-                parts               := strings.Split(volume, ":")
-                mount.Source        = parts[0]
-                mount.Destination   = parts[1]
-                if len(parts) > 2 {
-                    if parts[2] == "ro" {
-                        mount.Mode  =   "ro"
-                        mount.RW    =   false
-                    } else {
-                        mount.Mode  =   "rw"
-                        mount.RW    =   true
-                    }
-                } else {
-                    mount.Mode  =   "rw"
-                    mount.RW    =   true
-                }
-                config.Mounts   =   append(config.Mounts, mount)
+                hostConfig.Binds    =   append(hostConfig.Binds, volume)
             }
         }
 
