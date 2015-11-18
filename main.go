@@ -20,7 +20,7 @@ func main() {
     vygre.ReadContainerConfig()
     vygre.CheckContainerConfig()
 
-    if flags.ConfigCheck {
+    if flags.TestConfig {
         vygre.Logger.Info("configuration ok")
         return
     }

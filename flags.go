@@ -7,9 +7,10 @@ import (
 )
 
 type FlagOpts struct {
-    ConfigCheck     bool
-    Help            bool
-    VersionCheck    bool
+    DebugMode    bool
+    Help         bool
+    TestConfig   bool
+    VersionCheck bool
 }
 
 var flags FlagOpts
@@ -19,8 +20,9 @@ func init() {
 
     if currentUser.Uid != "0" { log.Fatal("vygre must be run as root") }
 
+    flag.BoolVar(&flags.DebugMode, "d", false, "enables debug logging")
     flag.BoolVar(&flags.Help, "h", false, "print help information")
-    flag.BoolVar(&flags.ConfigCheck, "t", false, "test configuration")
+    flag.BoolVar(&flags.TestConfig, "t", false, "test configuration")
     flag.BoolVar(&flags.VersionCheck, "v", false, "print version information")
 
     flag.Parse()

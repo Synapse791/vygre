@@ -92,7 +92,9 @@ func (client *VygreClient) ReadConfig() {
 }
 
 func (client *VygreClient) CheckConfig() {
-    if client.Config.LogLevel != "" {
+    if flags.DebugMode {
+        client.Logger.Level =   logrus.DebugLevel
+    } else if client.Config.LogLevel != "" {
         switch client.Config.LogLevel {
         case "debug":
             client.Logger.Level =   logrus.DebugLevel
@@ -108,6 +110,8 @@ func (client *VygreClient) CheckConfig() {
             break
         }
     }
+
+    client.Logger.Debug("debug logging enabled")
 
     // Checks if auth is set
     if client.Config.Auth != (docker.AuthConfiguration{}) {
