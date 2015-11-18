@@ -108,12 +108,12 @@ func (client *VygreClient) CheckConfig() {
 
     // Checks if auth is set
     if client.Config.Auth != (docker.AuthConfiguration{}) {
-        client.Logger.Debug("docker authentication found")
-        client.Logger.Debug("validating docker authentication")
+        client.Logger.Info("authentication found")
+        client.Logger.Debug("beginning authentication check")
         if err := client.DockerClient.AuthCheck(&client.Config.Auth); err != nil {
             client.Logger.WithField("error", err.Error()).Fatal("docker authentication failed")
         }
-        client.Logger.Info("authentication successful")
+        client.Logger.Info("authentication check successful")
     }
 
     if client.Config.CheckInterval == 0 {
@@ -213,6 +213,10 @@ func (client *VygreClient) ProcessContainerConfig() {
                         binding.HostIP      =   parts[0]
                         binding.HostPort    =   parts[1]
                         hostConfig.PortBindings[docker.Port(parts[2])]  =   append(hostConfig.PortBindings[docker.Port(parts[2])], binding)
+                        portMap := map[docker.Port]struct{}{
+                            docker.Port(fmt.Sprintf("%s/tcp", parts[2])): {},
+                        }
+                        config.ExposedPorts = portMap
                     } else {
                         binding.HostIP      =   "0.0.0.0"
                         binding.HostPort    =   parts[0]
@@ -220,16 +224,20 @@ func (client *VygreClient) ProcessContainerConfig() {
 
                         bindingMap[docker.Port(parts[1] + "/tcp")] = []docker.PortBinding{binding}
                         hostConfig.PortBindings =   bindingMap
+                        portMap := map[docker.Port]struct{}{
+                            docker.Port(fmt.Sprintf("%s/tcp", parts[1])): {},
+                        }
+                        config.ExposedPorts = portMap
                     }
                 } else {
-                    portMap := make(map[docker.Port]struct{})
+                    hostConfig.PublishAllPorts  =   true
 
-                    var empty struct{}
-
-                    portMap[docker.Port(fmt.Sprintf("%s/tcp", port))]   =   empty
-
+                    portMap := map[docker.Port]struct{}{
+                        docker.Port(fmt.Sprintf("%s/tcp", port)): {},
+                    }
                     config.ExposedPorts = portMap
                 }
+
             }
         }
 
@@ -245,8 +253,6 @@ func (client *VygreClient) ProcessContainerConfig() {
                 hostConfig.Binds    =   append(hostConfig.Binds, volume)
             }
         }
-
-        hostConfig.PublishAllPorts  =   true
 
         options.Config          =   &config
         options.HostConfig      =   &hostConfig
