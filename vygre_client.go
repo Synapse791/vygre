@@ -10,6 +10,7 @@ import (
     "strings"
     "time"
     "regexp"
+    "flag"
 )
 
 const dockerEndpoint        = "unix:///var/run/docker.sock"
@@ -50,6 +51,8 @@ type VygreOptionsState struct {
     Active      bool
     Attempts    int
 }
+
+var vygre *VygreClient
 
 func NewVygreClient() *VygreClient {
 
@@ -352,10 +355,6 @@ func (client *VygreClient) RunServer() {
     }
 }
 
-func (client *VygreClient) PrintVersion() {
-    fmt.Printf("vygre %s\n", client.Version)
-}
-
 func (client *VygreClient) GetContainerCount(image string) int {
     containerList, err := client.DockerClient.ListContainers(docker.ListContainersOptions{All: false})
     if err != nil {
@@ -372,3 +371,13 @@ func (client *VygreClient) GetContainerCount(image string) int {
 
     return count
 }
+
+func (client *VygreClient) PrintHelp() {
+    fmt.Print(VYGRE_HELP_TEXT)
+    flag.PrintDefaults()
+}
+
+func (client *VygreClient) PrintVersion() {
+    fmt.Printf("vygre %s\n", client.Version)
+}
+
