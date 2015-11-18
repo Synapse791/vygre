@@ -1,9 +1,9 @@
 package main
 
 import (
-    "flag"
-    "os/user"
     "os"
+    "os/user"
+    "flag"
     log "github.com/Sirupsen/logrus"
 )
 
@@ -36,7 +36,7 @@ func main() {
     vygre.CheckContainerConfig()
 
     if flags.ConfigCheck {
-        log.Info("configuration ok")
+        vygre.Logger.Info("configuration ok")
         return
     }
 
