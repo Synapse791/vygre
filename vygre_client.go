@@ -2,6 +2,7 @@ package main
 
 import (
     "os"
+    "errors"
     "fmt"
     "encoding/json"
     "io/ioutil"
@@ -67,15 +68,13 @@ func (client *VygreClient) ReadConfig() {
 
     rawConfig, err := ioutil.ReadFile(configFilePath)
     if err != nil {
-        log.Error(err.Error())
-        log.Fatal("failed to read vygre configuration")
+        log.WithError(err).Fatal("failed to read vygre configuration")
     }
 
     var config VygreConfig
 
     if err := json.Unmarshal(rawConfig, &config); err != nil {
-        log.Error(err.Error())
-        log.Fatal("invalid vygre configuration")
+        log.WithError(err).Fatalf("invalid vygre configuration")
     }
 
     client.Config = config
@@ -88,15 +87,13 @@ func (client *VygreClient) CheckConfig() {
         log.Info("docker authentication found")
         log.Info("validating docker authentication")
         if err := client.DockerClient.AuthCheck(&client.Config.Auth); err != nil {
-            log.Error(err.Error())
-            log.Fatal("docker authentication failed")
+            log.WithError(err).Fatal("docker authentication failed")
         }
         log.Info("authentication successful")
     }
 
     if client.Config.CheckInterval == 0 {
-        log.Error("check_interval must be more than 0")
-        log.Fatal("invalid configuration")
+        log.WithError(errors.New("check_interval must be more than 0")).Fatal("invalid configuration")
     }
 
     log.Infof("check interval set to %d seconds", client.Config.CheckInterval)
@@ -110,8 +107,7 @@ func (client *VygreClient) ReadContainerConfig() {
 
     fileList, err := ioutil.ReadDir(containerConfigDir)
     if err != nil {
-        log.Error(err.Error())
-        log.Fatalf("failed to get file list from %s", containerConfigDir)
+        log.WithError(err).Fatalf("failed to get file list from %s", containerConfigDir)
     }
 
     for _, fileName := range fileList {
@@ -120,14 +116,12 @@ func (client *VygreClient) ReadContainerConfig() {
         log.Infof("reading %s", fullName)
         rawJson, err := ioutil.ReadFile(fullName)
         if err != nil {
-            log.Error(err.Error())
-            log.Fatalf("failed to decode %s", fullName)
+            log.WithError(err).Fatalf("failed to decode %s", fullName)
         }
 
         var config VygreContainerConfig
         if err := json.Unmarshal(rawJson, &config); err != nil {
-            log.Error(fmt.Sprintf("invalid JSON in %s", fileName))
-            log.Fatal("invalid configuration")
+            log.WithError(errors.New(fmt.Sprintf("invalid JSON in %s", fileName))).Fatal("invalid configuration")
         }
 
         client.ContainerConfigs = append(client.ContainerConfigs, &config)
@@ -151,15 +145,18 @@ func (client *VygreClient) CheckContainerConfig() {
         }
         for _, port := range config.Ports {
             if match, _ := regexp.MatchString("^(?:[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:)?(?:[0-9]{1,5}:)?[0-9]{1,5}$", port); !match {
-                log.Error("ports must follow the format of the docker run -p flag (https://docs.docker.com/engine/reference/run/#expose-incoming-ports)")
-                log.Fatalf("invalid port '%s'", port)
+                log.WithError(fmt.Errorf("ports must follow the format of the docker run -p flag (https://docs.docker.com/engine/reference/run/#expose-incoming-ports)")).Fatal(fmt.Sprintf("invalid port '%s'", port))
             }
         }
+//        for _, env := range config.Environments {
+//            if match, _ := regexp.MatchString("^[A-Za-z0-9_]+=.+$", env); !match {
+//                log.Fatal("image must be a standard docker image name with option registry location and/or tag")
+//            }
+//        }
         for _, volume := range config.Volumes {
             parts := strings.Split(volume, ":")
             if _, err := os.Stat(parts[0]); os.IsNotExist(err) {
-                log.Error(err.Error())
-                log.Fatal("volume mount not found")
+                log.WithError(err).Fatalf("volume mount not found")
             }
             if match, _ := regexp.MatchString("^[/a-zA-z0-9-_\\.]+:[/a-zA-z0-9-_\\.]+", volume); !match {
                 log.Fatal("image must be a standard docker image name with option registry location and/or tag")
@@ -283,8 +280,7 @@ func (client *VygreClient) UpdateImages() {
         }
 
         if err := client.DockerClient.PullImage(pullOptions, auth); err != nil {
-            log.Error(err.Error())
-            log.Fatal("failed to pull docker image")
+            log.WithError(err).Fatal("failed to pull docker image")
         }
 
         log.Info("pulled successfully")
@@ -311,15 +307,13 @@ func (client *VygreClient) RunServer() {
                 options.Options.Name = ""
                 new, err := client.DockerClient.CreateContainer(options.Options)
                 if err != nil {
-                    log.Error(err.Error())
-                    log.Fatal("failed to create container")
+                    log.WithError(err).Fatal("failed to create container")
                 }
                 log.Infof("created %s", new.ID)
 
                 log.Infof("starting %s", new.ID)
                 if err := client.DockerClient.StartContainer(new.ID, new.HostConfig); err != nil {
-                    log.Error(err.Error())
-                    log.Fatal("failed to start container")
+                    log.WithError(err).Fatal("failed to start container")
                 }
 
                 time.Sleep(2 * time.Second)
@@ -346,8 +340,7 @@ func (client *VygreClient) PrintVersion() {
 func (client *VygreClient) GetContainerCount(image string) int {
     containerList, err := client.DockerClient.ListContainers(docker.ListContainersOptions{All: false})
     if err != nil {
-        log.Error(err.Error())
-        log.Fatal("failed to list running containers")
+        log.WithError(err).Fatal("failed to list running containers")
     }
 
     count := 0
