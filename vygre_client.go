@@ -13,9 +13,9 @@ import (
     "flag"
 )
 
-const dockerEndpoint        = "unix:///var/run/docker.sock"
-const configFilePath        = "/etc/vygre/config.json"
-const containerConfigDir    = "/etc/vygre/conf.d"
+const DOCKER_ENDPOINT       =   "unix:///var/run/docker.sock"
+const CONFIG_FILE_PATH      =   "/etc/vygre/config.json"
+const CONTAINER_CONFIG_DIR  =   "/etc/vygre/conf.d"
 
 type VygreClient struct {
     Logger              *logrus.Logger
@@ -60,7 +60,7 @@ func NewVygreClient() *VygreClient {
     logger.Out      =   os.Stdout
     logger.Level    =   logrus.InfoLevel
 
-    dockerClient, err := docker.NewClient(dockerEndpoint)
+    dockerClient, err := docker.NewClient(DOCKER_ENDPOINT)
     if err != nil {
         logger.WithField("error", err.Error()).Fatal("failed to create docker client")
     }
@@ -70,13 +70,13 @@ func NewVygreClient() *VygreClient {
 
 func (client *VygreClient) ReadConfig() {
 
-    client.Logger.Debugf("reading configuration from %s", configFilePath)
+    client.Logger.Debugf("reading configuration from %s", CONFIG_FILE_PATH)
 
-    if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-        client.Logger.Fatalf("vygre config file not found at %s", configFilePath)
+    if _, err := os.Stat(CONFIG_FILE_PATH); os.IsNotExist(err) {
+        client.Logger.Fatalf("vygre config file not found at %s", CONFIG_FILE_PATH)
     }
 
-    rawConfig, err := ioutil.ReadFile(configFilePath)
+    rawConfig, err := ioutil.ReadFile(CONFIG_FILE_PATH)
     if err != nil {
         client.Logger.WithField("error", err.Error()).Fatal("failed to read vygre configuration")
     }
@@ -130,17 +130,17 @@ func (client *VygreClient) CheckConfig() {
 func (client *VygreClient) ReadContainerConfig() {
     client.Logger.Info("reading container configuration")
 
-    if _, err := os.Stat(containerConfigDir); os.IsNotExist(err) {
-        client.Logger.Fatalf("vygre config directory not found at %s", containerConfigDir)
+    if _, err := os.Stat(CONTAINER_CONFIG_DIR); os.IsNotExist(err) {
+        client.Logger.Fatalf("vygre config directory not found at %s", CONTAINER_CONFIG_DIR)
     }
 
-    fileList, err := ioutil.ReadDir(containerConfigDir)
+    fileList, err := ioutil.ReadDir(CONTAINER_CONFIG_DIR)
     if err != nil {
-        client.Logger.WithField("error", err.Error()).Fatalf("failed to get file list from %s", containerConfigDir)
+        client.Logger.WithField("error", err.Error()).Fatalf("failed to get file list from %s", CONTAINER_CONFIG_DIR)
     }
 
     for _, fileName := range fileList {
-        fullName := fmt.Sprintf("%s/%s", containerConfigDir, fileName.Name())
+        fullName := fmt.Sprintf("%s/%s", CONTAINER_CONFIG_DIR, fileName.Name())
 
         client.Logger.Debugf("reading %s", fullName)
         rawJson, err := ioutil.ReadFile(fullName)
