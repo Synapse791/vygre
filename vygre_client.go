@@ -254,10 +254,15 @@ func (client *VygreClient) ProcessContainerConfig() {
                         mount.Mode  =   "rw"
                         mount.RW    =   true
                     }
+                } else {
+                    mount.Mode  =   "rw"
+                    mount.RW    =   true
                 }
                 config.Mounts   =   append(config.Mounts, mount)
             }
         }
+
+        hostConfig.PublishAllPorts  =   true
 
         options.Config          =   &config
         options.HostConfig      =   &hostConfig
@@ -304,6 +309,8 @@ func (client *VygreClient) UpdateImages() {
             client.Logger.WithField("error", err.Error()).Fatal("failed to pull docker image")
         }
 
+        client.Logger.Info("pull complete")
+
     }
 }
 
@@ -328,9 +335,9 @@ func (client *VygreClient) RunServer() {
                 if err != nil {
                     client.Logger.WithField("error", err.Error()).Fatal("failed to create container")
                 }
-                client.Logger.Infof("created %s", new.ID)
+                client.Logger.Infof("created %s", new.ID[0:8])
 
-                client.Logger.Infof("starting %s", new.ID)
+                client.Logger.Infof("starting %s", new.ID[0:8])
                 if err := client.DockerClient.StartContainer(new.ID, new.HostConfig); err != nil {
                     client.Logger.WithField("error", err.Error()).Fatal("failed to start container")
                 }
@@ -346,6 +353,8 @@ func (client *VygreClient) RunServer() {
                         options.State.Active    =   false
                         client.Logger.Errorf("setting %s to INACTIVE", options.Options.Config.Image)
                     }
+                } else {
+                    client.Logger.Infof("started %s", new.ID[0:8])
                 }
             }
         }
