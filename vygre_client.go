@@ -203,6 +203,7 @@ func (client *VygreClient) ProcessContainerConfig() {
         }
 
         if len(containerConfig.Ports) > 0 {
+            hostConfig.NetworkMode  =   "default"
             for _, port := range containerConfig.Ports {
                 if strings.Contains(port, ":") {
                     var binding docker.PortBinding
@@ -218,7 +219,7 @@ func (client *VygreClient) ProcessContainerConfig() {
                         }
                         config.ExposedPorts = portMap
                     } else {
-                        binding.HostIP      =   "0.0.0.0"
+                        binding.HostIP      =   ""
                         binding.HostPort    =   parts[0]
                         bindingMap  := make(map[docker.Port][]docker.PortBinding)
 
