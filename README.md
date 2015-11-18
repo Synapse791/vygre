@@ -1,58 +1,64 @@
 # Vygre
-**Keep your docker containers running**
+**Start new docker containers when your old ones die**
 
 ### Overview
-Vygre is a service designed to ensure that docker containers stay running. Maybe you have a web service running in a docker container and you want to make sure that if for some reason the container dies, your site doesn't go down. Vygre will spot that container isn't running and start up another.
-The program reads JSON config files describing your containers and creates them accordingly. In these files you can specify the image, volumes, ports and how many instances of the container there should be.
+Vygre is a service designed to ensure that docker containers are always running. Maybe you have a web service running in a docker container and you want to make sure that if for some reason the container dies, your site doesn't go down. Vygre will spot that container isn't running and start up another based on your configuration.
+The program reads JSON config files describing your containers and creates them accordingly. In these files you can specify the image, ports, environment variables, volumes, and how many instances of the container there should be.
 
-### Application config
-The default location for the config.json file is `/etc/vygre/config.json`. This can be altered using the `-c` flag and passing the filepath of the config.json file when running the program.
+### Vygre configuration
+The location for the JSON configuration file is `/etc/vygre/config.json`
 
-```sh
-vygre -c /tmp/config.json
-```
-
-You can also test the application config using the `-t` flag.
-
-```sh
-vygre -c /tmp/config.json -t
-
-# Or to test the default location
-vygre -t
-```
-
+#### Structure
 ```json
 {
-  "install_dir"     : "/etc/vygre",
-  "docker_endpoint" : "unix:///var/run/docker.sock",
+  "log_level"       : "warning",
   "check_interval"  : 5,
   "auth"            : {
-    "username" : "groot",
-    "password" : "letmein",
-    "email"    : "groot@gmail.com"
+    "serveraddress"   : "https://myregistry.net",
+    "username"        : "registry_user",
+    "password"        : "Registry_user_password",
+    "email"           : "registry_user_email"
   }
 }
 ```
-* **install_dir** - the location of the vygre config files. Inside this directory should be the config.json file and conf.d directory. *DEFAULT: /etc/vygre*
-* **docker_endpoint** - The docker endpoint to query. *DEFAULT: unix:///var/run/docker.sock*
-* **check_interval** - The interval to check containers in seconds *DEFAULT: 3*
-* **auth** - The authorization information for docker (as if you ran `sudo docker login`) *DEFAULT: nil*
 
-### Example container config file
-Container configuration files should be stored in the conf.d directory inside the `install_dir` directory from the config.json file. 
+Parameter          | Description                                                                                                                 | Default
+-------------------|-----------------------------------------------------------------------------------------------------------------------------|---------
+log_level          | level of log output messages to display. This parameter will be overwritten by the `-d` flag. [debug\|info\|warning\|error] | warning
+check_interval     | number of seconds between checks                                                                                            | 5
+auth               | authorization object for private docker registry                                                                            | nil
+auth.serveraddress | address, including scheme, of the private docker registry to authenticate against                                           | nil
+auth.username      | username to use for authenticating                                                                                          | nil
+auth.password      | password to use for authenticating                                                                                          | nil
+auth.email         | email to use for authenticating                                                                                             | nil
+
+### Container Configuration
+The container configuration files should be stored in `/etc/vygre/conf.d/` in JSON format
+
+#### Structure
 ```json
 {
-  "image": "mysql:latest",
-  "instances": 1,
-  "hostname": "app-db",
-  "env": [
-    "MYSQL_ROOT_PASSWORD=letmein"
-  ],
-  "ports": {
-    "3306/tcp": [{"HostPort": "3306"}]
+  "image": "myregistry.net/my-app:latest",
+  "instances": 2,
+  "env": {
+    "MY_APP_ENV" : "production"
   },
+  "ports": [
+    "3000",
+    "80:80",
+    "10.100.1.1:443:443"
+  ],
   "volumes": [
-    "/tmp/www:/usr/share/nginx/html"
+    "/var/cache/my-app:/var/cache/my-app",
+    "/tmp:/tmp/host_tmp:ro"
   ]
 }
 ```
+
+Parameter | Description
+----------|-------------------------------------------------------------------------------------------------------
+image     | docker image name, including registry and tag if required
+instances | the number of instances you require running. If specifying host ports, this **must** be set to 1
+env       | map environment variables for the container as key value pairs
+ports     | array of ports to expose. If no host port is specified, a random host port will be assigned
+volumes   | array of volumes to mount in the format of `host_path:container_path`. Optional `:ro` or `:rw` suffix
