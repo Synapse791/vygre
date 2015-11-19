@@ -1,5 +1,11 @@
 package main
 
+const DOCKER_ENDPOINT       =   "unix:///var/run/docker.sock"
+const CONFIG_FILE_PATH      =   "/etc/vygre/config.json"
+const CONTAINER_CONFIG_DIR  =   "/etc/vygre/conf.d"
+
+var vygre *VygreClient
+
 func main() {
 
     vygre = NewVygreClient()
