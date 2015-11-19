@@ -16,6 +16,7 @@ type VygreConfig struct {
     LogLevel        string                      `json:"log_level"`
     CheckInterval   time.Duration               `json:"check_interval"`
     Auth            docker.AuthConfiguration    `json:"auth"`
+    SMTP            VygreSMTPConfig             `json:"smtp"`
 }
 
 func (client *VygreClient) ReadConfig() {
@@ -63,6 +64,10 @@ func (client *VygreClient) CheckConfig() {
 
     client.Logger.Debug("debug logging enabled")
 
+    if client.Config.CheckInterval == 0 {
+        client.Logger.WithField("error", "check_interval must be more than 0").Fatal("invalid configuration")
+    }
+
     // Checks if auth is set
     if client.Config.Auth != (docker.AuthConfiguration{}) {
         client.Logger.Info("authentication found")
@@ -73,8 +78,18 @@ func (client *VygreClient) CheckConfig() {
         client.Logger.Info("authentication check successful")
     }
 
-    if client.Config.CheckInterval == 0 {
-        client.Logger.WithField("error", "check_interval must be more than 0").Fatal("invalid configuration")
+    if client.Config.SMTP != (VygreSMTPConfig{}) {
+        client.Logger.Info("smtp configuration found")
+        client.Logger.Debug("beginning authentication check")
+        if client.Config.SMTP.Port == 0 {
+            client.Logger.Debug("using default port 587")
+            client.Config.SMTP.Port = 587
+        }
+        if err := client.CheckSMTPConfig(); err != nil {
+            client.Logger.Error(err)
+            client.Logger.Fatalf("failed to authenticate against SMTP server %s", client.Config.SMTP.Host)
+        }
+        client.Logger.Info("smtp configuration valid")
     }
 
     client.Logger.Debugf("check interval set to %d seconds", client.Config.CheckInterval)

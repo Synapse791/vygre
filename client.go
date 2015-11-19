@@ -172,9 +172,11 @@ func (client *VygreClient) RunServer() {
                 if newCount != count + 1 {
                     client.Logger.Warnf("failed to start %s", new.ID)
                     options.State.Attempts++
-                    if options.State.Attempts > 3 {
+                    if options.State.Attempts > 2 {
                         options.State.Active    =   false
-                        client.Logger.Errorf("setting %s to INACTIVE", options.Options.Config.Image)
+                        client.Logger.Errorf("setting %s to INACTIVE after 3 failed attempts", options.Options.Config.Image)
+                        client.Logger.Warn("sending INACTIVE alert email")
+                        client.SendInactiveNotification(options.Options.Config.Image)
                     }
                 } else {
                     client.Logger.Infof("started %s", new.ID[0:8])
