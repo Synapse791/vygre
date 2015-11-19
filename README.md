@@ -12,12 +12,13 @@ The program reads JSON config files describing your containers and creates them 
 #### Flags
 The following flags are available to alter the behavior of the service
  
-Flag | Description                | Exit Code               | Default
------|----------------------------|-------------------------|---------
-`-d` | enables debug logging      | nil                     | false
-`-h` | prints help information    | 0                       | false
-`-t` | tests configuration        | 0 on success, 1 on fail | false
-`-v` | prints version information | 0                       | false
+Flag | Description                    | Exit Code               | Default
+-----|--------------------------------|-------------------------|---------
+`-d` | enables debug logging          | nil                     | false
+`-e` | prints configuration templates | 0                       | false
+`-h` | prints help information        | 0                       | false
+`-t` | tests configuration            | 0 on success, 1 on fail | false
+`-v` | prints version information     | 0                       | false
 
 #### Configuration File (required)
 The location for the JSON configuration file is `/etc/vygre/config.json`

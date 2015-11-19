@@ -18,6 +18,10 @@ func main() {
         vygre.PrintHelp()
         return
     }
+    if flags.Example {
+        vygre.PrintConfigurationTemplates()
+        return
+    }
 
     vygre.Logger.Warn("initializing server")
 

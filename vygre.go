@@ -2,10 +2,8 @@ package main
 
 import (
     "os"
-    "fmt"
     "github.com/Sirupsen/logrus"
     "github.com/fsouza/go-dockerclient"
-    "flag"
 )
 
 type VygreClient struct {
@@ -30,13 +28,3 @@ func NewVygreClient() *VygreClient {
 
     return &VygreClient{Version: currentVersion, DockerClient: dockerClient, Logger: logger}
 }
-
-func (client *VygreClient) PrintHelp() {
-    fmt.Print(VYGRE_HELP_TEXT)
-    flag.PrintDefaults()
-}
-
-func (client *VygreClient) PrintVersion() {
-    fmt.Printf("vygre %s\n", client.Version)
-}
-
